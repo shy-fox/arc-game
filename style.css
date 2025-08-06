@@ -56,4 +56,15 @@ div.game-container {
     position: absolute;
     bottom: 0;
     left: 0;
+
+}
+
+div.version {
+    position: fixed;
+    bottom: 10px;
+    right: 10px;
+    color: #fff;
+    font-family: 'Baloo', sans-serif;
+    font-size: 16px;
+    opacity: 0.7;
 }
