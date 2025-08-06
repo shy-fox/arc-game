@@ -1,0 +1,7 @@
+/** Initialized fonts */
+@font-face {
+    font-family: 'Baloo';
+    src: url('./fonts/Baloo-Regular.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
