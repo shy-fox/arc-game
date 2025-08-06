@@ -116,6 +116,7 @@ let arcs = [
 
 let totalScore = 0; // Default score
 let totalMultiplier = 1; // Default multiplier from Prestige
+let totalExpenses = 0; // Total expenses
 
 const filler = Math.PI / 250; // How much to fill each frame
 
@@ -205,7 +206,7 @@ window.onload = () => {
             block_content.style.textShadow = '4 px 4px 0 rgba(255, 255, 255, 0.1)';
             block_content.style.fontSize = '2.4rem';
             block_content.style.justifyContent = 'center';
-            block.style.width = '5rem'
+            block.style.width = '5rem';
         }
 
         if (i === colors.length * 2 - 1) block_content.textContent = '=';
@@ -217,6 +218,40 @@ window.onload = () => {
         // Add to the score bar
         bar.appendChild(block);
     }
+
+    // Hopefully this will not give me a stroke
+    // So we add an element which tracks all expenses
+    const expenseTracker = document.createElement('div');
+    expenseTracker.className = 'expense-tracker';
+    expenseTracker.style.display = 'flex';
+    expenseTracker.style.flexDirection = 'row';
+    expenseTracker.style.justifyContent = 'space-between';
+    expenseTracker.style.width = '20%';
+    expenseTracker.style.backgroundColor = 'transparent';
+    expenseTracker.style.position = 'absolute';
+    expenseTracker.style.top = '8em';
+    expenseTracker.style.right = '0';
+    expenseTracker.style.zIndex = '1000';
+    expenseTracker.style.overflowY = 'auto';
+    expenseTracker.style.color = '#fff';
+    expenseTracker.style.fontFamily = 'Baloo, sans-serif';
+    expenseTracker.style.padding = '0 0.5rem';
+
+    // We add a symbol to the expense tracker
+    const expenseHeader = document.createElement('span');
+    expenseHeader.textContent = 'Spent:';
+    expenseHeader.style.textShadow = '4px 4px 0 rgba(255, 255, 255, 0.1)';
+    expenseHeader.style.fontSize = '2rem';
+
+    // And here we complile all expenses
+    const expenses = document.createElement('span');
+    expenses.className = 'expenses';
+    expenses.style.display = 'flex';
+    expenses.style.backgroundColor = 'transparent';
+    expenses.style.color = '#fff';
+    expenses.style.fontFamily = 'Baloo, sans-serif';
+    expenses.style.fontSize = '2rem';
+    expenses.textContent = "0";
 
     // Create a button bar on the right side
     const buttonBar = document.createElement('div');
@@ -255,7 +290,9 @@ window.onload = () => {
 
     container.appendChild(buttonBar);
     container.appendChild(statsBar);
-
+    container.appendChild(expenseTracker);
+    expenseTracker.appendChild(expenseHeader);
+    expenseTracker.appendChild(expenses);
 
     let statsDisplays = [];
 
@@ -327,16 +364,30 @@ window.onload = () => {
         button.disabled = true; // Initially disabled
 
         button.addEventListener('click', () => {
+            let price = 0;
+
             if (arc.unlocked) {
                 if (totalScore < arc.levelUpPrice) return; // Not enough score to level up
                 totalScore -= arc.levelUpPrice;
                 arc.level++;
+                arc.time *= 0.9; // Decrease time by 10% on level up
+                arc.multiplier *= 1.5; // Increase multiplier by 50% on level
+
+                price = arc.levelUpPrice; // Set price to level up price
+
+                // Add to expenses
+                totalExpenses += arc.levelUpPrice;
             }
             if (totalScore >= arc.price) {
                 totalScore -= arc.price;
                 arc.unlocked = true;
                 button.disabled = true; // Disable the button after purchase, for now
                 arc.level++;
+                
+                price = arc.price; // Set price to initial price
+
+                // Add to expenses
+                totalExpenses += arc.price;
             }
 
             if (arc.level === 1) {
@@ -346,8 +397,13 @@ window.onload = () => {
                 arc.levelUpPrice = Math.floor(arc.levelUpPrice * 1.5);
             }
 
+            expenses.textContent = shortenNumbers(totalExpenses);
+
             checkFlag = false;
             button.innerHTML = `Level ${arc.level + 1} &mdash; ${shortenNumbers(arc.levelUpPrice)} &pi;`;
+
+            // Reset all values to default
+            arc.value = index === 0 ? totalScore - price : 0;
         });
 
         buttonList.push(button);
@@ -437,13 +493,13 @@ window.onload = () => {
             let currentMultiplierElement = statsDisplays[index].querySelector(`.multiplier-display-${index}`);
             let currentSpeedElement = statsDisplays[index].querySelector(`.speed-display-${index}`);
             if (arc.unlocked &&
-                ((currentMultiplierElement == null || !statTags[index] || statTags[index]['mult'] !== currentMultiplierElement.innerHTML) &&
-                    (currentSpeedElement == null || !statTags[index] || statTags[index]['spd'] !== currentSpeedElement.innerHTML))) {
+                ((currentMultiplierElement == null || !statTags[index] || statTags[index]['mult'] !== arc.multiplier) &&
+                    (currentSpeedElement == null || !statTags[index] || statTags[index]['spd'] !== arc.time))) {
                 statsBar.appendChild(statsDisplays[index]);
-                currentMultiplierElement.innerHTML = `<span>&pi;/2&pi;:</span> <span>${shortenNumbers(arc.multiplier)}</span>`;
-                currentSpeedElement.innerHTML = `<span>Speed:</span> <span">${((filler / arc.time) / deltaTime).toFixed(0)}</span>`;
+                currentMultiplierElement.innerHTML = `<span>&pi;/2&pi;:</span> <span>${shortenNumbers(arc.multiplier * 2)}</span>`;
+                currentSpeedElement.innerHTML = `<span>Speed:</span> <span">${((filler / arc.time) / deltaTime).toFixed(2)}</span>`;
 
-                statTags[index] = { mult: currentMultiplierElement.innerHTML, spd: currentSpeedElement.innerHTML }; // Store the stat tag for later use
+                statTags[index] = { mult: arc.multiplier, spd: arc.time }; // Store the stat tag for later use
             }
 
             // Update the score display
@@ -501,7 +557,7 @@ window.onload = () => {
 
 // Shorten numbers for display, but integer only, no decimals
 function shortenNumbers(num) {
-    if (num < 1e3) return num.toFixed(0);
+    if (num < 1e3) return Math.floor(num).toString();
     if (num < 1e6) return (num / 1e3).toFixed(0) + 'K';
     if (num < 1e9) return (num / 1e6).toFixed(0) + 'M';
     if (num < 1e12) return (num / 1e9).toFixed(0) + 'B';
@@ -509,6 +565,7 @@ function shortenNumbers(num) {
     if (num < 1e18) return (num / 1e15).toFixed(0) + 'Q';
     if (num < 1e21) return (num / 1e18).toFixed(0) + 'Qn';
     if (num < 1e23) return (num / 1e21).toFixed(0) + 'S';
-    if (num < 1e24) return (num / 1e24).toFixed(0) + 'Sp';
-    return (num / 1e27).toFixed(0) + 'O';
+    if (num < 1e27) return (num / 1e24).toFixed(0) + 'Sp';
+    if (num < 1e30) return (num / 1e27).toFixed(0) + 'O';
+    return num.toExponential(2).replace('e+', 'e');
 }
