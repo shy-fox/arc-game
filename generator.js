@@ -500,7 +500,7 @@ window.onload = () => {
             ctx.lineWidth = lineWidth;
             ctx.beginPath();
             ctx.strokeStyle = arc.color;
-            ctx.arc(cx, cy, 75 * (index + 1), angle, angle + arc.angle, false);
+            ctx.arc(cx, cy, 60 * (index + 1), angle, angle + arc.angle, false); // Actually makes the outermost circle visible!
             ctx.stroke();
 
             arc.angle += filler / arc.time;
@@ -590,4 +590,5 @@ function shortenNumbers(num) {
     if (num < 1e27) return (num / 1e24).toFixed(0) + 'Sp';
     if (num < 1e30) return (num / 1e27).toFixed(0) + 'O';
     return num.toExponential(2).replace('e+', 'e');
+
 }
