@@ -2,10 +2,13 @@ let timeStamp = performance.now();
 
 let checkFlag = false; // Flag to check if the button is already checked
 
+const maxLevel = 75; // Maximum level for an arc
+
 let arcs = [
     {
         'value': 0,
         'multiplier': 1,
+        'currentMultiplier': -1,
         'time': 1,
         'unlocked': false,
         'color': '#FF0000',
@@ -16,6 +19,7 @@ let arcs = [
     }, {
         'value': 0,
         'multiplier': 100,
+        'currentMultiplier': -1,
         'time': 2.5,
         'unlocked': false,
         'color': '#FFA500',
@@ -27,6 +31,7 @@ let arcs = [
     {
         'value': 0,
         'multiplier': 500,
+        'currentMultiplier': -1,
         'time': 5,
         'unlocked': false,
         'color': '#FFFF00',
@@ -38,6 +43,7 @@ let arcs = [
     {
         'value': 0,
         'multiplier': 15000,
+        'currentMultiplier': -1,
         'time': 10,
         'unlocked': false,
         'color': '#a1d873',
@@ -49,6 +55,7 @@ let arcs = [
     {
         'value': 0,
         'multiplier': 50000,
+        'currentMultiplier': -1,
         'time': 15,
         'unlocked': false,
         'color': '#51fab9',
@@ -60,6 +67,7 @@ let arcs = [
     {
         'value': 0,
         'multiplier': 1000000,
+        'currentMultiplier': -1,
         'time': 20,
         'unlocked': false,
         'color': '#69b3f8',
@@ -71,6 +79,7 @@ let arcs = [
     {
         'value': 0,
         'multiplier': 2500000,
+        'currentMultiplier': -1,
         'time': 30,
         'unlocked': false,
         'color': '#884de7',
@@ -82,6 +91,7 @@ let arcs = [
     {
         'value': 0,
         'multiplier': 35000000,
+        'currentMultiplier': -1,
         'time': 50,
         'unlocked': false,
         'color': '#a04de7',
@@ -93,6 +103,7 @@ let arcs = [
     {
         'value': 0,
         'multiplier': 200000000,
+        'currentMultiplier': -1,
         'time': 75,
         'unlocked': false,
         'color': '#e74de7',
@@ -104,6 +115,7 @@ let arcs = [
     {
         'value': 0,
         'multiplier': 2000000000,
+        'currentMultiplier': -1,
         'time': 100,
         'unlocked': false,
         'color': '#d4d4d4',
@@ -366,12 +378,22 @@ window.onload = () => {
         button.addEventListener('click', () => {
             let price = 0;
 
+            // We disable on max level
+            if (arc.level >= maxLevel) {
+                button.disabled = true;
+                button.style.backgroundColor = 'gray';
+                button.style.color = 'black';
+                button.style.cursor = 'default';
+                button.innerHTML = 'Max Level';
+                return;
+            }
+
             if (arc.unlocked) {
                 if (totalScore < arc.levelUpPrice) return; // Not enough score to level up
                 totalScore -= arc.levelUpPrice;
                 arc.level++;
-                arc.time *= 0.9; // Decrease time by 10% on level up
-                arc.multiplier *= 1.5; // Increase multiplier by 50% on level
+                arc.time *= 0.95; // Decrease time by 5% on level up
+                arc.currentMultiplier = arc.multiplier * 1.5; // Increase multiplier by 50% on level
 
                 price = arc.levelUpPrice; // Set price to level up price
 
@@ -484,7 +506,7 @@ window.onload = () => {
             arc.angle += filler / arc.time;
 
             if (arc.angle >= 2 * Math.PI) {
-                let internalValue = 2 * arc.multiplier * totalMultiplier;
+                let internalValue = 2 * (arc.currentMultiplier === -1 ? arc.multiplier : arc.currentMultiplier) * totalMultiplier;
                 arc.value += internalValue; // Increment value based on multiplier
                 arc.angle = 0; // Reset angle after a full circle
                 totalScore += internalValue; // Add value to total score
@@ -493,13 +515,13 @@ window.onload = () => {
             let currentMultiplierElement = statsDisplays[index].querySelector(`.multiplier-display-${index}`);
             let currentSpeedElement = statsDisplays[index].querySelector(`.speed-display-${index}`);
             if (arc.unlocked &&
-                ((currentMultiplierElement == null || !statTags[index] || statTags[index]['mult'] !== arc.multiplier) &&
+                ((currentMultiplierElement == null || !statTags[index] || statTags[index]['mult'] !== arc.currentMultiplier === -1 ? arc.multiplier : arc.currentMultiplier) &&
                     (currentSpeedElement == null || !statTags[index] || statTags[index]['spd'] !== arc.time))) {
                 statsBar.appendChild(statsDisplays[index]);
-                currentMultiplierElement.innerHTML = `<span>&pi;/2&pi;:</span> <span>${shortenNumbers(arc.multiplier * 2)}</span>`;
+                currentMultiplierElement.innerHTML = `<span>&pi;/2&pi;:</span> <span>${shortenNumbers((arc.currentMultiplier === -1 ? arc.multiplier : arc.currentMultiplier) * 2)}</span>`;
                 currentSpeedElement.innerHTML = `<span>Speed:</span> <span">${((filler / arc.time) / deltaTime).toFixed(2)}</span>`;
 
-                statTags[index] = { mult: arc.multiplier, spd: arc.time }; // Store the stat tag for later use
+                statTags[index] = { mult: arc.currentMultiplier === -1 ? arc.multiplier : arc.currentMultiplier, spd: arc.time }; // Store the stat tag for later use
             }
 
             // Update the score display
