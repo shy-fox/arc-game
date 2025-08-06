@@ -393,7 +393,7 @@ window.onload = () => {
                 totalScore -= arc.levelUpPrice;
                 arc.level++;
                 arc.time *= 0.95; // Decrease time by 5% on level up
-                arc.currentMultiplier = arc.multiplier * 1.5; // Increase multiplier by 50% on level
+                arc.currentMultiplier += Math.max(2, arc.multiplier * 1.5); // Increase multiplier by 50% on level
 
                 price = arc.levelUpPrice; // Set price to level up price
 
@@ -500,7 +500,7 @@ window.onload = () => {
             ctx.lineWidth = lineWidth;
             ctx.beginPath();
             ctx.strokeStyle = arc.color;
-            ctx.arc(cx, cy, 60 * (index + 1), angle, angle + arc.angle, false); // Actually makes the outermost circle visible!
+            ctx.arc(cx, cy, 60 * (index + 1), angle, angle + arc.angle, false);
             ctx.stroke();
 
             arc.angle += filler / arc.time;
@@ -527,7 +527,7 @@ window.onload = () => {
             // Update the score display
             const scoreElement = document.querySelector(`.score-${index}`);
             if (scoreElement) {
-                scoreElement.textContent = shortenNumbers(arc.value);
+                scoreElement.textContent = roundShort(arc.value);
             }
         });
 
@@ -580,15 +580,28 @@ window.onload = () => {
 // Shorten numbers for display, but integer only, no decimals
 function shortenNumbers(num) {
     if (num < 1e3) return Math.floor(num).toString();
-    if (num < 1e6) return (num / 1e3).toFixed(0) + 'K';
-    if (num < 1e9) return (num / 1e6).toFixed(0) + 'M';
-    if (num < 1e12) return (num / 1e9).toFixed(0) + 'B';
-    if (num < 1e15) return (num / 1e12).toFixed(0) + 'T';
-    if (num < 1e18) return (num / 1e15).toFixed(0) + 'Q';
-    if (num < 1e21) return (num / 1e18).toFixed(0) + 'Qn';
-    if (num < 1e23) return (num / 1e21).toFixed(0) + 'S';
-    if (num < 1e27) return (num / 1e24).toFixed(0) + 'Sp';
-    if (num < 1e30) return (num / 1e27).toFixed(0) + 'O';
-    return num.toExponential(2).replace('e+', 'e');
+    if (num < 1e6) return (num / 1e3).toFixed(2) + 'K';
+    if (num < 1e9) return (num / 1e6).toFixed(2) + 'M';
+    if (num < 1e12) return (num / 1e9).toFixed(2) + 'B';
+    if (num < 1e15) return (num / 1e12).toFixed(2) + 'T';
+    if (num < 1e18) return (num / 1e15).toFixed(2) + 'Q';
+    if (num < 1e21) return (num / 1e18).toFixed(2) + 'Qn';
+    if (num < 1e23) return (num / 1e21).toFixed(2) + 'S';
+    if (num < 1e27) return (num / 1e24).toFixed(2) + 'Sp';
+    if (num < 1e30) return (num / 1e27).toFixed(2) + 'O';
+    return num.toExponential(1).replace('e+', 'e');
+}
 
+function roundShort(num) {
+    if (num < 1e3) return Math.floor(num);
+    if (num < 1e6) return Math.floor(num / 1e3) + 'K';
+    if (num < 1e9) return Math.floor(num / 1e6) + 'M';
+    if (num < 1e12) return Math.floor(num / 1e9) + 'B';
+    if (num < 1e15) return Math.floor(num / 1e12) + 'T';
+    if (num < 1e18) return Math.floor(num / 1e15) + 'Q';
+    if (num < 1e21) return Math.floor(num / 1e18) + 'Qn';
+    if (num < 1e23) return Math.floor(num / 1e21) + 'S';
+    if (num < 1e27) return Math.floor(num / 1e24) + 'Sp';
+    if (num < 1e30) return Math.floor(num / 1e27) + 'O';
+    return num.toExponential(0).replace('e+', 'e');
 }
